@@ -1,0 +1,146 @@
+{
+  "log": {
+    "level": "info"
+  },
+  "dns": {
+    "servers": [
+      {
+        "address": "tls://1.1.1.1"
+      }
+    ],
+    "strategy": "prefer_ipv4",
+    "disable_cache": false
+  },
+  "inbounds": [
+    {
+      "type": "vmess",
+      "listen": "::",
+      "listen_port": 61800,
+      "sniff": true,
+      "sniff_override_destination": true,
+      "users": [
+        {
+          "uuid": "ad2c9acd-3afb-4fae-aff2-954c532020bd",
+          "alterId": 0
+        }
+      ],
+      "transport": {
+        "type": "ws",
+        "path": "SecretPATH/vm",
+        "max_early_data": 2048,
+        "early_data_header_name": "Sec-WebSocket-Protocol"
+      }
+    },
+    {
+      "type": "trojan",
+      "listen": "::",
+      "listen_port": 61801,
+      "sniff": true,
+      "sniff_override_destination": true,
+      "users": [{ "password": "PASSWORD" }],
+      "transport": {
+        "type": "ws",
+        "path": "SecretPATH/tr",
+        "max_early_data": 2048,
+        "early_data_header_name": "Sec-WebSocket-Protocol"
+      }
+    },
+    {
+      "type": "vmess",
+      "tag": "vmess-wg",
+      "listen": "::",
+      "listen_port": 61802,
+      "sniff": true,
+      "sniff_override_destination": true,
+      "users": [
+        {
+          "uuid": "ad2c9acd-3afb-4fae-aff2-954c532020bd",
+          "alterId": 0
+        }
+      ],
+      "transport": {
+        "type": "ws",
+        "path": "SecretPATH/wgvm",
+        "max_early_data": 2048,
+        "early_data_header_name": "Sec-WebSocket-Protocol"
+      }
+    },
+    {
+      "type": "trojan",
+      "tag": "trojan-wg",
+      "listen": "::",
+      "listen_port": 61803,
+      "sniff": true,
+      "sniff_override_destination": true,
+      "users": [{ "password": "PASSWORD" }],
+      "transport": {
+        "type": "ws",
+        "path": "SecretPATH/wgtr",
+        "max_early_data": 2048,
+        "early_data_header_name": "Sec-WebSocket-Protocol"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "selector",
+      "tag": "Select",
+      "outbounds": [
+        "Direct",
+        "WARP",
+        "Tor"
+      ]
+    },
+    {
+      "type": "direct",
+      "tag": "Direct",
+      "domain_strategy": "prefer_ipv4"
+    },
+    {
+      "type": "wireguard",
+      "tag": "WARP",
+      "server": "engage.cloudflareclient.com",
+      "server_port": 2408,
+      "local_address": ["198.18.0.1/32"],
+      "private_key": "WG_PRIVATE_KEY",
+      "peer_public_key": "WG_PEER_PUBLIC_KEY"
+    },
+    {
+      "type": "socks",
+      "tag": "Tor",
+      "server": "127.0.0.1",
+      "server_port": 9050
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "geosite": ["tor"],
+        "outbound": "Tor",
+        "clash_mode": "rule"
+      },
+      {
+        "inbound": ["vmess-wg", "trojan-wg"],
+        "outbound": "WARP",
+        "clash_mode": "rule"
+      },
+      {
+        "geosite": ["netflix","disney","openai","bing","imgur"],
+        "outbound": "WARP",
+        "clash_mode": "rule"
+      },
+      {
+        "outbound": "Direct",
+        "clash_mode": "direct"
+      }
+    ],
+    "final": "Select"
+  },
+  "experimental": {
+    "clash_api": {
+      "external_controller": "127.0.0.1:61804",
+      "secret": "PASSWORD",
+      "default_mode": "rule"
+    }
+  }
+}
