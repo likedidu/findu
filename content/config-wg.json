@@ -5,10 +5,28 @@
   "dns": {
     "servers": [
       {
-        "address": "tls://1.1.1.1"
+        "address": "tls://1.1.1.1",
+        "strategy": "prefer_ipv4"
+      },
+      {
+        "tag": "warp-dns",
+        "address": "tls://1.1.1.1",
+        "strategy": "prefer_ipv6"
       }
     ],
-    "strategy": "prefer_ipv4",
+    "rules": [
+      {
+        "inbound": [
+          "vmess-wg",
+          "trojan-wg"
+        ],
+        "server": "warp-dns"
+      },
+      {
+        "outbound": ["WARP"],
+        "server": "warp-dns"
+      }
+    ],
     "disable_cache": false
   },
   "inbounds": [
@@ -63,7 +81,8 @@
         "path": "SecretPATH/wgvm",
         "max_early_data": 2048,
         "early_data_header_name": "Sec-WebSocket-Protocol"
-      }
+      },
+      "domain_strategy": "prefer_ipv6"
     },
     {
       "type": "trojan",
@@ -78,7 +97,8 @@
         "path": "SecretPATH/wgtr",
         "max_early_data": 2048,
         "early_data_header_name": "Sec-WebSocket-Protocol"
-      }
+      },
+      "domain_strategy": "prefer_ipv6"
     }
   ],
   "outbounds": [
@@ -98,18 +118,33 @@
     },
     {
       "type": "wireguard",
-      "tag": "WARP",
+      "tag": "warp",
       "server": "engage.cloudflareclient.com",
       "server_port": 2408,
-      "local_address": ["198.18.0.1/32"],
+      "local_address": [
+        "198.18.0.1/32",
+        "fd00::1/128"
+      ],
       "private_key": "WG_PRIVATE_KEY",
-      "peer_public_key": "WG_PEER_PUBLIC_KEY"
+      "peer_public_key": "WG_PEER_PUBLIC_KEY",
+      "reserved": [0, 0, 0],
+      "mtu": 1408
     },
     {
       "type": "socks",
       "tag": "Tor",
       "server": "127.0.0.1",
       "server_port": 9050
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    },
+    {
+      "type": "direct",
+      "tag": "WARP",
+      "detour": "warp",
+      "domain_strategy": "prefer_ipv6"
     }
   ],
   "route": {
@@ -120,12 +155,18 @@
         "clash_mode": "rule"
       },
       {
-        "inbound": ["vmess-wg", "trojan-wg"],
-        "outbound": "WARP",
+        "protocol": ["quic"],
+        "port": [ 443 ],
+        "outbound": "block",
         "clash_mode": "rule"
       },
       {
-        "geosite": ["netflix","disney","openai","bing","imgur"],
+        "inbound": ["vmess-wg", "trojan-wg"],
+        "outbound": "warp",
+        "clash_mode": "rule"
+      },
+      {
+        "geosite": ["netflix","disney","openai","dazn","spotify","bing","imgur"],
         "outbound": "WARP",
         "clash_mode": "rule"
       },
