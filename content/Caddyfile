@@ -1,5 +1,5 @@
 :{$PORT} {
-	handle {$SecretPATH}/vm* {
+	handle {$SecretPATH}/* {
 		@websocket {
 			header Connection *Upgrade*
 			header Upgrade websocket
@@ -12,7 +12,7 @@
 		}
 		respond * 401
 	}
-	handle {$SecretPATH}/wgvm* {
+	handle {$SecretPATH}/* {
 		@websocket-wgvm {
 			header Connection *Upgrade*
 			header Upgrade websocket
@@ -25,7 +25,7 @@
 		}
 		respond * 401
 	}
-	handle {$SecretPATH}/tr* {
+	handle {$SecretPATH}/* {
 		@http-req {
 			header X-Forwarded-Proto http
 		}
@@ -42,7 +42,7 @@
 		}
 		respond * 401
 	}
-	handle {$SecretPATH}/wgtr* {
+	handle {$SecretPATH}/* {
 		@http-req {
 			header X-Forwarded-Proto http
 		}
@@ -59,7 +59,7 @@
 		}
 		respond * 401
 	}
-	handle {$SecretPATH}/api* {
+	handle {$SecretPATH}/* {
 		@http-req {
 			header X-Forwarded-Proto http
 		}
