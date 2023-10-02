@@ -1,0 +1,3 @@
+tunnel: ARGOID
+credentials-file: /workdir/argo.json
+url: http://localhost:PORT
