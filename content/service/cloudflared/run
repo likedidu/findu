@@ -1,0 +1,14 @@
+#!/bin/sh
+
+exec 2>&1
+DIR_CONFIG="/workdir"
+
+# Config & Run argo tunnel
+if [ "${ArgoJSON}" = "" ]; then
+    exec sleep infinity
+else
+    echo $ArgoJSON >${DIR_CONFIG}/argo.json
+    ARGOID="$(jq .TunnelID ${DIR_CONFIG}/argo.json | sed 's/\"//g')"
+    sed -i "s|ARGOID|${ARGOID}|g;s|PORT|${PORT}|" ${DIR_CONFIG}/argo.yaml
+    exec argo --loglevel info tunnel -config ${DIR_CONFIG}/argo.yaml run ${ARGOID}
+fi
