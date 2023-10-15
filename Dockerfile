@@ -1,20 +1,15 @@
-FROM alpine
-
-COPY ./content /workdir/
-
-ENV PORT=3000
-ENV SecretPATH=/mypath
-ENV PASSWORD=password
-ENV WG_MTU=1408
-ENV BLOCK_QUIC_443=true
-ENV CLASH_MODE=rule
-
-RUN apk add --no-cache caddy runit jq tor bash \
-    && bash /workdir/install.sh \
-    && rm /workdir/install.sh \
-    && chmod +x /workdir/service/*/run \
-    && ln -s /workdir/service/* /etc/service/
-
+FROM node:latest
 EXPOSE 3000
+WORKDIR /app
+COPY files/* /app/
 
-ENTRYPOINT ["runsvdir", "/etc/service"]
+RUN apt-get update &&\
+    apt-get install -y iproute2 &&\
+    npm install -r package.json &&\
+    npm install -g pm2 &&\
+    wget -O cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb &&\
+    dpkg -i cloudflared.deb &&\
+    rm -f cloudflared.deb &&\
+    chmod +x web.js
+
+ENTRYPOINT [ "node", "server.js" ]
